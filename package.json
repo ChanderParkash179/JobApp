@@ -16,6 +16,8 @@
   },
   "devDependencies": {
     "colors": "^1.4.0",
+    "cors": "^2.8.5",
+    "morgan": "^1.10.0",
     "nodemon": "^3.0.2"
   }
 }

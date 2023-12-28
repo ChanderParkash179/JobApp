@@ -8,6 +8,7 @@ const morgan = require("morgan");
 // file imports
 const { mongoConnect } = require("./src/database/connection");
 const test_router = require("./src/routers/test.router");
+const auth_router = require("./src/routers/auth.router");
 
 // .ENV configuration
 dotenv.config({ path: './src/configurations/.env' });
@@ -30,6 +31,7 @@ app.use(morgan("dev"));
 
 // routes
 app.use("/test", test_router);
+app.use("/auth", auth_router);
 
 // app listeners
 app.listen(PORT, () => console.log(`server started in ${process.env.DEV_MODE} Mode on PORT => ${PORT}`.bgCyan.black));

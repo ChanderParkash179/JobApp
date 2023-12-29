@@ -10,6 +10,7 @@ const { mongoConnect } = require("./src/database/connection");
 const test_router = require("./src/routers/test.router");
 const auth_router = require("./src/routers/auth.router");
 const user_router = require("./src/routers/user.router");
+const job_router = require("./src/routers/job.router");
 const restrict_middleware = require("./src/middlewares/restrict.middleware");
 
 // .ENV configuration
@@ -35,6 +36,7 @@ app.use(morgan("dev"));
 app.use("/test", test_router);
 app.use("/auth", auth_router);
 app.use("/user", restrict_middleware.restrict, user_router);
+app.use("/job", restrict_middleware.restrict, job_router);
 
 // app listeners
 app.listen(PORT, () => console.log(`server started in ${process.env.DEV_MODE} Mode on PORT => ${PORT}`.bgCyan.black));

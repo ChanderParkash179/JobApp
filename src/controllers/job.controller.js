@@ -12,7 +12,6 @@ async function create(req, res) {
 
     const user = jwt.getUser(req.headers.authorization.split(" ")[1]);
 
-    console.log(user);
     req.body.createdBy = user._id;
 
     const job = await Job.create(req.body);
@@ -186,7 +185,6 @@ async function stats(req, res) {
       monthly_stats,
     });
   } catch (error) {
-    console.log(error);
     res.status(400).send({
       message: "Error in getting jobs by position!",
       success: false,

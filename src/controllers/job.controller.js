@@ -1,5 +1,7 @@
 const Job = require("../models/job.model");
 const jwt = require("../jwt/jwt.service");
+const moongse = require("mongoose");
+const moment = require("moment");
 
 async function create(req, res) {
   try {
@@ -126,5 +128,71 @@ async function getJobsByPosition(req, res) {
   }
 }
 
+async function stats(req, res) {
+  try {
+    const token = req.headers.authorization.split(" ")[1];
 
-module.exports = { create, modify, cut, all, getJobsByPosition, getJobsByCompany }
+    const user = jwt.getUser(token);
+
+    const stats = await Job.aggregate([
+      {
+        $match: {
+          createdBy: new moongse.Types.ObjectId(user._id)
+        },
+      },
+      {
+        $group: {
+          _id: '$status',
+          count: {
+            $sum: 1
+          },
+        },
+      }
+    ]);
+
+    let monthly_stats = await Job.aggregate([
+      {
+        $match: {
+          createdBy: new moongse.Types.ObjectId(user._id)
+        },
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' }
+          },
+          count: {
+            $sum: 1
+          },
+        },
+      }
+    ]);
+
+    monthly_stats = monthly_stats.map((item) => {
+      const { _id: { year, month }, count } = item;
+
+      const date = moment().month(month - 1).year(year).format('MMM y');
+      return { date, count }
+    });
+
+    res.status(200).json({
+      stat_count: stats.length,
+      status: {
+        pending: stats.pending || 0,
+        interview: stats.interview || 0,
+        internship: stats.internship || 0,
+      },
+      monthly_stats,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).send({
+      message: "Error in getting jobs by position!",
+      success: false,
+      error
+    });
+  }
+}
+
+module.exports = { create, modify, cut, all, stats, getJobsByPosition, getJobsByCompany }

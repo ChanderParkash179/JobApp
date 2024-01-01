@@ -205,20 +205,35 @@ async function search_sort(req, res) {
       createdBy: user._id
     }
 
+    // searching
     if (status && status !== "all") query.status = status;
     if (workType && workType !== "all") query.workType = workType;
     if (search) query.position = { $regex: search, $options: "i" };
 
     let result = await Job.find(query);
 
+    // sorting
     if (sort === "latest") result = result.sort((a, b) => b.createdAt - a.createdAt);
     if (sort === "oldest") result = result.sort((a, b) => a.createdAt - b.createdAt);
     if (sort === "a-z") result = result.sort((a, b) => a.position.localeCompare(b.position));
     if (sort === "A-Z") result = result.sort((a, b) => b.position.localeCompare(a.position));
 
+    // pagination
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    result = result.skip(skip).limit(limit);
+
+    // jobs count
+    const count = await Job.countDocuments(result);
+
+    // page number
+    const page_number = Math.ceil(count / limit);
+
     const jobs = result;
 
-    return res.status(200).json({ count: jobs.length, jobs });
+    return res.status(200).json({ count, page: page_number, jobs, });
   } catch (error) {
     console.log(error);
     res.status(400).send({

@@ -193,4 +193,49 @@ async function stats(req, res) {
   }
 }
 
-module.exports = { create, modify, cut, all, stats, getJobsByPosition, getJobsByCompany }
+async function search_sort(req, res) {
+
+  try {
+    const { status, workType, search, sort } = req.query;
+
+    const token = req.headers.authorization.split(" ")[1];
+    const user = jwt.getUser(token);
+
+    const query = {
+      createdBy: user._id
+    }
+
+    if (status && status !== "all") query.status = status;
+    if (workType && workType !== "all") query.workType = workType;
+    if (search) query.position = { $regex: search, $options: "i" };
+
+    let result = await Job.find(query);
+
+    if (sort === "latest") result = result.sort((a, b) => b.createdAt - a.createdAt);
+    if (sort === "oldest") result = result.sort((a, b) => a.createdAt - b.createdAt);
+    if (sort === "a-z") result = result.sort((a, b) => a.position.localeCompare(b.position));
+    if (sort === "A-Z") result = result.sort((a, b) => b.position.localeCompare(a.position));
+
+    const jobs = result;
+
+    return res.status(200).json({ count: jobs.length, jobs });
+  } catch (error) {
+    console.log(error);
+    res.status(400).send({
+      message: "Error in search with status!",
+      success: false,
+      error
+    });
+  }
+}
+
+module.exports = {
+  create,
+  modify,
+  cut,
+  all,
+  stats,
+  search_sort,
+  getJobsByPosition,
+  getJobsByCompany,
+}
